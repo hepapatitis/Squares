@@ -54,6 +54,7 @@ function scene:show( event )
 	local phase = event.phase
 	local game_timer
 	local game_time
+	local is_paused = 0
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
@@ -92,23 +93,44 @@ function scene:show( event )
 			create_timer.width = local_timer_width * game_time / 100
 			create_timer.x = create_timer.width / 2
 		end
-
-		game_timer = timer.performWithDelay( 1, game_loop, 0 )
+		
+		
+		-- Start & Pause Game Function
+		local function pause_game()
+			timer.pause(game_timer)
+		end
+		
+		local function resume_game()
+			timer.resume(game_timer)
+		end
 		
 		-- Pause Function
-		local function pause_game( event )
-			if event.phase == "began" then
-				timer.pause(game_timer)
+		local function pause_listener( event )
+			if event.numTaps == 1 then
+				if is_paused == 0 then
+					pause_game()
+					is_paused = 1
+				else
+					resume_game()
+					is_paused = 0
+				end
 			end
 			return true
 		end
+		
+		local function start_game()
+			game_timer = timer.performWithDelay( 1, game_loop, 0 )
+			is_paused = false
+		end
+		
+		start_game()
 		
 		-- Create Pause Button
 		local pause_btn = display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-pause.png", pause_btn_width, top_menu_height )
 		pause_btn.x = top_menu_width+(pause_btn_width/2)
 		pause_btn.y = 0
 		
-		pause_btn:addEventListener( "touch", pause_game )
+		pause_btn:addEventListener( "tap", pause_listener )
 	
 		-- Create Question
 		function create_question(color, sceneGroup, scoreText)
