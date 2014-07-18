@@ -90,7 +90,7 @@ function scene:show( event )
 		end
 		
 		function refresh_time_look()
-			create_timer.width = local_timer_width * game_time / 100
+			create_timer.width = local_timer_width - (local_timer_width * game_time / 100)
 			create_timer.x = create_timer.width / 2
 		end
 		
@@ -176,6 +176,26 @@ function scene:show( event )
 			block.y = (color_request_height)+(top_menu_height/2)+(local_timer_height)+(playing_field_height/2)
 			block.color = color;
 			
+			-- Function to remove block
+			-- Called after transition
+			function remove_block( block )
+				block.isVisible = false
+				
+				local random_color = math.random(0, 3)
+				if playing_field1~=nil then 
+					playing_field1 = create_block(random_color, sceneGroup, scoreText)
+					playing_field1:toBack()
+				elseif playing_field2~=nil then 
+					playing_field2 = create_block(random_color, sceneGroup, scoreText)
+					playing_field2:toBack()
+				elseif playing_field3~=nil then 
+					playing_field3 = create_block(random_color, sceneGroup, scoreText)
+					playing_field3:toBack()
+				end
+				
+				block:removeSelf()
+			end
+			
 			function block:touch( event )
 				if event.phase == "began" then
 					-- first we set the focus on the object
@@ -187,14 +207,39 @@ function scene:show( event )
 					self.markY = self.y
 					self.diffX = 0
 					self.diffY = 0
+					self.tmpX = 0
+					self.tmpY = 0
+					self.tmpDiffX = 0
+					self.tmpDiffY = 0
 				elseif self.isFocus then
-				
+
 					if event.phase == "moved" then
 						-- then drag our object
-						self.x = event.x - event.xStart + self.markX
 						
-						if event.y - event.yStart + self.markY > self.markY then
-							self.y = event.y - event.yStart + self.markY
+						-- do a bit of test
+						self.tmpX = event.x - event.xStart + self.markX
+						self.tmpY = event.y - event.yStart + self.markY
+						if self.tmpX > self.markX then
+							self.tmpDiffX = self.tmpX - self.markX
+						elseif self.tmpX < self.markX then
+							self.tmpDiffX = self.markX - self.tmpX
+						end
+						
+						if self.tmpY > self.markY then
+							self.tmpDiffY = self.tmpY - self.markY
+						elseif self.tmpY < self.markY then
+							self.tmpDiffY = self.markY - self.tmpY
+						end
+						
+						-- Now we know whether we can move horizontally or vertically
+						if self.tmpDiffX > self.tmpDiffY then
+							self.x = event.x - event.xStart + self.markX
+							self.y = self.markY
+						else
+							if event.y - event.yStart + self.markY > self.markY then
+								self.y = event.y - event.yStart + self.markY
+								self.x = self.markX
+							end
 						end
 					elseif event.phase == "ended" or event.phase == "cancelled" then
 						-- we end the movement by removing the focus from the object
@@ -213,42 +258,27 @@ function scene:show( event )
 							self.diffY = self.markY - self.y
 						end
 						
-						if self.diffX > (self.width / 2) then
+						-- Create Remove Block Listener
+						local listener_remove_block = function( obj )
+							remove_block(obj)
+						end
+						
+						-- Remove by Horizontal
+						if self.diffX > (self.width / 10) then
 							-- Removed
-							self.isVisible = false
-							
-							local random_color = math.random(0, 3)
-							if playing_field1~=nil then 
-								playing_field1 = create_block(random_color, sceneGroup, scoreText)
-								playing_field1:toBack()
-							elseif playing_field2~=nil then 
-								playing_field2 = create_block(random_color, sceneGroup, scoreText)
-								playing_field2:toBack()
-							elseif playing_field3~=nil then 
-								playing_field3 = create_block(random_color, sceneGroup, scoreText)
-								playing_field3:toBack()
+							if self.x < self.markX then
+								transition.to( self, { time=100, transition=easing.outInCirc, x=(0 - (phone_width/2)), onComplete=listener_remove_block })
+							else
+								transition.to( self, { time=100, transition=easing.outInCirc, x=(phone_width * 3 / 2), onComplete=listener_remove_block })
 							end
-							
-							self:removeSelf()
 						else
 							self.x = self.markX
 						end
 						
-						if self.diffY > (self.height / 2) then
+						-- Remove by Vertical
+						if self.diffY > (self.height / 10) then
 							-- Removed
-							self.isVisible = false
-							
-							local random_color = math.random(0, 3)
-							if playing_field1~=nil then 
-								playing_field1 = create_block(random_color, sceneGroup, scoreText)
-								playing_field1:toBack()
-							elseif playing_field2~=nil then 
-								playing_field2 = create_block(random_color, sceneGroup, scoreText)
-								playing_field2:toBack()
-							elseif playing_field3~=nil then 
-								playing_field3 = create_block(random_color, sceneGroup, scoreText)
-								playing_field3:toBack()
-							end
+							transition.to( self, { time=100, transition=easing.outInCirc, y=(phone_height * 3 / 2), onComplete=listener_remove_block })
 							
 							if color_req.color == self.color then
 								score = score + 1
@@ -260,7 +290,6 @@ function scene:show( event )
 							color_req = create_question(random_color, sceneGroup, scoreText)
 							reset_time()
 							scoreText.text = score
-							self:removeSelf()
 						else
 							self.y = self.markY
 						end
