@@ -5,7 +5,6 @@
 
 local storyboard = require( "composer" )
 local scene = storyboard.newScene()
-storyboard.purgeOnSceneChange = true;
 
 local ASSET_FOLDER = "assets/"
 
@@ -21,13 +20,6 @@ function scene:create( event )
 	-- 
 	-- INSERT code here to initialize the scene
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
-	
-	-- START
-	display.setStatusBar( display.HiddenStatusBar )
-end
-
-function scene:show( event )
-	local sceneGroup = self.view
 	
 	local bg =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_bg.png", phone_width, phone_height )
 	bg.x = phone_width/2
@@ -46,8 +38,19 @@ function scene:show( event )
 		
 	local function onTap( event )
 		storyboard.gotoScene( "scene_game" )
+		return true
 	end
 	play_btn:addEventListener( "tap", onTap )
+	
+end
+
+function scene:show( event )
+	local sceneGroup = self.view
+	
+	if(storyboard.getPrevious() ~= nil) then
+		storyboard.purgeScene(storyboard.getPrevious())
+		storyboard.removeScene(storyboard.getPrevious())
+	end
 end
 
 function scene:hide( event )
@@ -72,6 +75,10 @@ function scene:destroy( event )
 	-- 
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
+	
+	phone_width = nil
+	phone_height = nil
+	ASSET_FOLDER = nil
 end
 
 ---------------------------------------------------------------------------------

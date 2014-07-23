@@ -3,18 +3,14 @@
 -- The game :D
 ---------------------------------------------------------------------------------
 
-local storyboard = require( "storyboard" )
+local storyboard = require( "composer" )
 local scene = storyboard.newScene()
-storyboard.purgeOnSceneChange = true;
 
--- Clear previous scene
-storyboard.removeAll()
+local ASSET_FOLDER = "assets/"
 
 local playing_field1
 local playing_field2
 local playing_field3
-local ASSET_FOLDER = "assets/"
-
 local phone_width = display.contentWidth
 local phone_height = display.contentHeight
 local playing_field_height = 275
@@ -39,7 +35,6 @@ function scene:create( event )
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 	
 	-- START
-	display.setStatusBar( display.HiddenStatusBar )
 	
 	-- Create Top Menu
 	local top_menu = display.newImageRect( sceneGroup, ASSET_FOLDER .. "top_menu.png", top_menu_width, top_menu_height )
@@ -56,12 +51,20 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local blockGroup = display.newGroup()
 	local phase = event.phase
+	
+	if(storyboard.getPrevious() ~= nil) then
+		storyboard.purgeScene(storyboard.getPrevious())
+		storyboard.removeScene(storyboard.getPrevious())
+	end
+	
 	local game_timer
 	local game_time
 	local is_paused = 0
+	local create_timer
 	
 	if phase == "will" then
 		-- Called when the scene is still off screen and is about to move on screen
+		
 	elseif phase == "did" then
 		-- Called when the scene is now on screen
 		-- 
@@ -75,7 +78,7 @@ function scene:show( event )
 		
 		-- Create Timer
 		local create_timer = display.newImageRect( sceneGroup, ASSET_FOLDER .. "timer.png", local_timer_width, local_timer_height )
-		create_timer.x = phone_width/2
+		create_timer.x = phone_width/2 - 1000
 		create_timer.y = (color_request_height)+(top_menu_height/2)+(local_timer_height/2)
 		
 		-- Timer START
@@ -94,7 +97,7 @@ function scene:show( event )
 		end
 		
 		function refresh_time_look()
-			create_timer.width = (local_timer_width * game_time / 100)
+			create_timer.width = local_timer_width - (local_timer_width * game_time / 100)
 			create_timer.x = create_timer.width / 2
 		end
 		
