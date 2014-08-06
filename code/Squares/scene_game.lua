@@ -41,20 +41,16 @@ function scene:create( event )
 	top_menu.x = top_menu_width/2
 	top_menu.y = 0
 	
-	-- Create Playing Field
-	playing_field1 = display.newImageRect( sceneGroup, ASSET_FOLDER .. "block-blue.png", playing_field_width, playing_field_height )
-	playing_field1.x = phone_width/2
-	playing_field1.y = (color_request_height)+(top_menu_height/2)+(local_timer_height)+(playing_field_height/2)
 end
 
 function scene:show( event )
 	local sceneGroup = self.view
 	local blockGroup = display.newGroup()
 	local phase = event.phase
-	
+	blockGroup:toBack()
 	if(storyboard.getPrevious() ~= nil) then
-		storyboard.purgeScene(storyboard.getPrevious())
-		storyboard.removeScene(storyboard.getPrevious())
+		storyboard.purgeScene(storyboard.getSceneName("previous"))
+		storyboard.removeScene(storyboard.getSceneName("previous"))
 	end
 	
 	local game_timer
@@ -105,6 +101,13 @@ function scene:show( event )
 		-- Start & Pause Game Function
 		local function pause_game()
 			timer.pause(game_timer)
+			local options =
+			{
+				effect = "fade",
+				time = 400,
+				params = { sample_var=456 }
+			}
+			storyboard.showOverlay( "scene_pause", options )
 		end
 		
 		local function resume_game()
@@ -343,6 +346,21 @@ function scene:destroy( event )
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
 end
 
+function scene:overlayBegan( event )
+	local sceneGroup = self.view
+	
+	local bg =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_bg.png", phone_width, phone_height )
+	bg.x = phone_width/2
+	bg.y = phone_height/2
+	
+	print( "The overlay scene is showing: " .. event.sceneName )
+    print( "We get custom params too! " .. event.params.sample_var )
+end
+
+function scene:overlayEnded( event )
+	print( "The following overlay scene was removed: " .. event.sceneName )
+end
+
 ---------------------------------------------------------------------------------
 
 -- Listener setup
@@ -350,6 +368,9 @@ scene:addEventListener( "create", scene )
 scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
+
+scene:addEventListener( "overlayBegan", scene )
+scene:addEventListener( "overlayEnded", scene )
 
 ---------------------------------------------------------------------------------
 
