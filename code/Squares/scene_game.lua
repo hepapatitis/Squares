@@ -7,6 +7,7 @@ local storyboard = require( "composer" )
 local scene = storyboard.newScene()
 
 local ASSET_FOLDER = "assets/"
+local ASSET_FOLDER_SOUND = ASSET_FOLDER .. "sounds/"
 
 local playing_field1
 local playing_field2
@@ -21,6 +22,21 @@ local top_menu_height = 50
 local color_request_height = 200
 local local_timer_height = 25
 local local_timer_width = phone_width
+
+local game_timer
+local game_time
+local is_paused = 0
+
+local audio_plus_point = audio.loadSound( ASSET_FOLDER_SOUND .. "score_plus/score_plus.wav" )
+local audio_minus_point = audio.loadSound( ASSET_FOLDER_SOUND .. "score_minus/score_minus.wav" )
+local audio_swipe = {
+    swipe1 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_01.wav" ),
+    swipe2 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_02.wav" ),
+    swipe3 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_03.wav" ),
+    swipe4 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_04.wav" ),
+    swipe5 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_05.wav" ),
+    swipe6 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_06.wav" )
+}
 
 local score = 0
 
@@ -53,9 +69,6 @@ function scene:show( event )
 		storyboard.removeScene(storyboard.getSceneName("previous"))
 	end
 	
-	local game_timer
-	local game_time
-	local is_paused = 0
 	local create_timer
 	
 	if phase == "will" then
@@ -100,11 +113,11 @@ function scene:show( event )
 		
 		-- Start & Pause Game Function
 		local function pause_game()
-			timer.pause(game_timer)
+			local result = timer.pause(game_timer)
 			local options =
 			{
 				effect = "fade",
-				time = 400,
+				time = 300,
 				params = { sample_var=456 }
 			}
 			storyboard.showOverlay( "scene_pause", options )
@@ -156,16 +169,21 @@ function scene:show( event )
 				image = ASSET_FOLDER .. "text-yellow.png"
 			end
 			
-			local color_req = display.newImageRect( sceneGroup, image, phone_width, color_request_height )
-			color_req.x = phone_width/2
-			color_req.y = (color_request_height/2)+(top_menu_height/2)
-			color_req.color = color
 			
-			return color_req
+			local crq = display.newImageRect( sceneGroup, image, phone_width, color_request_height )
+			crq.x = phone_width/2
+			crq.y = (color_request_height/2)+(top_menu_height/2)
+			crq.color = color
+			
+			return crq
 		end
 		
 		-- Create Color Request
 		local color_req = create_question(0, sceneGroup, scoreText)
+		
+		function play_swipe()
+			audio.play(audio_swipe["swipe" .. math.random(1,6)])
+		end
 		
 		-- Create Block Function
 		function create_block(color, sceneGroup, scoreText)
@@ -275,6 +293,7 @@ function scene:show( event )
 						
 						-- Remove by Horizontal
 						if self.diffX > (self.width / 10) then
+							play_swipe()
 							-- Removed
 							if self.x < self.markX then
 								transition.to( self, { time=100, transition=easing.outInCirc, x=(0 - (phone_width/2)), onComplete=listener_remove_block })
@@ -292,11 +311,14 @@ function scene:show( event )
 							
 							if color_req.color == self.color then
 								score = score + 1
+								audio.play(audio_plus_point)
 							else
 								score = score - 1
+								audio.play(audio_minus_point)
 							end
 							
 							random_color = math.random(0, 3)
+							color_req:removeSelf()
 							color_req = create_question(random_color, sceneGroup, scoreText)
 							reset_time()
 							scoreText.text = score
@@ -314,12 +336,17 @@ function scene:show( event )
 			return block;
 		end
 		
-		
 		-- Create Playing Field (a.k.a Block)
 		playing_field1 = create_block(2, blockGroup, scoreText)
 		playing_field2 = create_block(3, blockGroup, scoreText)
 		
 	end	
+end
+
+-- Custom function for resuming the game (from pause state)
+function scene:resumeGame()
+    timer.resume(game_timer)
+	is_paused = 0
 end
 
 function scene:hide( event )
@@ -344,6 +371,14 @@ function scene:destroy( event )
 	-- 
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
+		
+	phone_width = nil
+	phone_height = nil
+	ASSET_FOLDER = nil
+	ASSET_FOLDER_SOUND = nil
+	
+    audio.stop(1)
+    audio.dispose()
 end
 
 function scene:overlayBegan( event )

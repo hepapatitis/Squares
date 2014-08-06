@@ -22,13 +22,23 @@ function scene:create( event )
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 	
 	--Define the rectangle
-	local bg = display.newRect( sceneGroup, phone_width/2, phone_height/2, phone_width, phone_height)
+	local bg = display.newRect( sceneGroup, phone_width/2, phone_height/2, phone_width, phone_height+100)
 	bg:setFillColor(0,0,0)
 	bg.alpha = 0.5
 	
-	local box =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "pause_block.png", 780/4, 1020/4 )
+	local box =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "pause_block.png", 275, 400 )
 	box.x = phone_width/2
 	box.y = phone_height/2
+	
+	local btn_back =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", 200, 50 )
+	btn_back.x = phone_width/2
+	btn_back.y = phone_height/2
+	
+	local function btnTap(event)
+		storyboard.hideOverlay("fade", 300)
+		return true
+	end
+	btn_back:addEventListener("tap", btnTap)
 	
 	sceneGroup:toFront()
 end
@@ -40,14 +50,17 @@ end
 function scene:hide( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+    local parent = event.parent 
 	
 	if event.phase == "will" then
 		-- Called when the scene is on screen and is about to move off screen
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
+		
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
+		parent:resumeGame()
 	end	
 end
 

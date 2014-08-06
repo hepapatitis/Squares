@@ -7,9 +7,12 @@ local storyboard = require( "composer" )
 local scene = storyboard.newScene()
 
 local ASSET_FOLDER = "assets/"
+local ASSET_FOLDER_SOUND = ASSET_FOLDER .. "sounds/"
 
 local phone_width = display.contentWidth
 local phone_height = display.contentHeight
+
+local audio_menu_click = audio.loadSound( ASSET_FOLDER_SOUND .. "select_menu_click/menu_click.wav" )
 
 ---------------------------------------------------------------------------------
 
@@ -36,11 +39,19 @@ function scene:create( event )
 	credits_btn.x = phone_width/2
 	credits_btn.y = phone_height/2 + 100
 		
-	local function onTap( event )
+	local function onTap_scene_game( event )
 		storyboard.gotoScene( "scene_game" )
+		audio.play(audio_menu_click)
 		return true
 	end
-	play_btn:addEventListener( "tap", onTap )
+	play_btn:addEventListener( "tap", onTap_scene_game )
+	
+	local function onTap_scene_credits( event )
+		storyboard.gotoScene( "scene_credits" )
+		audio.play(audio_menu_click)
+		return true
+	end
+	credits_btn:addEventListener( "tap", onTap_scene_credits )
 	
 end
 
@@ -48,7 +59,6 @@ function scene:show( event )
 	local sceneGroup = self.view
 	
 	if(storyboard.getPrevious() ~= nil) then
-		storyboard.purgeScene(storyboard.getSceneName("previous"))
 		storyboard.removeScene(storyboard.getSceneName("previous"))
 	end
 end
@@ -79,6 +89,10 @@ function scene:destroy( event )
 	phone_width = nil
 	phone_height = nil
 	ASSET_FOLDER = nil
+	ASSET_FOLDER_SOUND = nil
+	
+    audio.stop(1)
+    audio.dispose()
 end
 
 ---------------------------------------------------------------------------------
