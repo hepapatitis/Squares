@@ -9,9 +9,6 @@ local scene = storyboard.newScene()
 local ASSET_FOLDER = "assets/"
 local ASSET_FOLDER_SOUND = ASSET_FOLDER .. "sounds/"
 
-local playing_field1
-local playing_field2
-local playing_field3
 local phone_width = display.contentWidth
 local phone_height = display.contentHeight
 local playing_field_height = 275
@@ -23,9 +20,29 @@ local color_request_height = 200
 local local_timer_height = 25
 local local_timer_width = phone_width
 
+local playing_field1
+local playing_field2
+local playing_field3
+local color_req
+
 local game_timer
 local game_time
 local is_paused = 0
+local TIMER_MULTIPLIER = 25
+local TIME_LIMIT = 10
+local TIME_BAR = TIME_LIMIT * TIMER_MULTIPLIER
+local TIMER_FPS = 1000 / TIMER_MULTIPLIER
+
+local score = require( "score" )
+local scoreText = score.init({
+	fontSize = 18,
+	font = native.systemFont,
+	x = 20,
+	y = 0,
+	maxDigits = 7,
+	leadingZeros = false,
+	filename = "scorefile.txt",
+})
 
 local audio_plus_point = audio.loadSound( ASSET_FOLDER_SOUND .. "score_plus/score_plus.wav" )
 local audio_minus_point = audio.loadSound( ASSET_FOLDER_SOUND .. "score_minus/score_minus.wav" )
@@ -38,8 +55,22 @@ local audio_swipe = {
     swipe6 = audio.loadSound( ASSET_FOLDER_SOUND .. "swipe_squares/whip_06.wav" )
 }
 
-local score = 0
 
+-- Start & Pause Game Function
+local function pause_game()
+	local result = timer.pause(game_timer)
+	local options =
+	{
+		effect = "fade",
+		time = 300,
+		params = { sample_var=456 }
+	}
+	storyboard.showOverlay( "scene_pause", options )
+end
+
+local function resume_game()
+	timer.resume(game_timer)
+end
 ---------------------------------------------------------------------------------
 
 function scene:create( event )
@@ -57,6 +88,7 @@ function scene:create( event )
 	top_menu.x = top_menu_width/2
 	top_menu.y = 0
 	
+	score.reset()
 end
 
 function scene:show( event )
@@ -75,15 +107,13 @@ function scene:show( event )
 		-- Called when the scene is still off screen and is about to move on screen
 		
 	elseif phase == "did" then
+		storyboard.removeScene("scene_splash", true)
 		-- Called when the scene is now on screen
 		-- 
 		-- INSERT code here to make the scene come alive
 		-- e.g. start timers, begin animation, play audio, etc.
 		
 		-- START
-		score = 0
-		local scoreText = display.newText( sceneGroup, score, 20, 0, native.systemFont, 16 )
-		scoreText:setFillColor( 255, 255, 255 )
 		
 		-- Create Timer
 		local create_timer = display.newImageRect( sceneGroup, ASSET_FOLDER .. "timer.png", local_timer_width, local_timer_height )
@@ -94,9 +124,11 @@ function scene:show( event )
 		game_time = 0
 		function game_loop()
 			refresh_time_look()
-			game_time = game_time + 0.25
-			if game_time >= 100 then
-				game_time = 0
+			game_time = game_time + 1
+			if game_time >= TIME_BAR then
+				-- When timer reaches the TIME_BAR, it's GAMEOVER
+				score.save()
+				pause_game()
 			end
 		end
 		
@@ -106,26 +138,10 @@ function scene:show( event )
 		end
 		
 		function refresh_time_look()
-			create_timer.width = local_timer_width - (local_timer_width * game_time / 100)
+			create_timer.width = local_timer_width - (local_timer_width * game_time / TIME_BAR)
 			create_timer.x = create_timer.width / 2
 		end
 		
-		
-		-- Start & Pause Game Function
-		local function pause_game()
-			local result = timer.pause(game_timer)
-			local options =
-			{
-				effect = "fade",
-				time = 300,
-				params = { sample_var=456 }
-			}
-			storyboard.showOverlay( "scene_pause", options )
-		end
-		
-		local function resume_game()
-			timer.resume(game_timer)
-		end
 		
 		-- Pause Function
 		local function pause_listener( event )
@@ -142,7 +158,7 @@ function scene:show( event )
 		end
 		
 		local function start_game()
-			game_timer = timer.performWithDelay( 1, game_loop, 0 )
+			game_timer = timer.performWithDelay( TIMER_FPS, game_loop, 0 )
 			is_paused = false
 		end
 		
@@ -179,7 +195,7 @@ function scene:show( event )
 		end
 		
 		-- Create Color Request
-		local color_req = create_question(0, sceneGroup, scoreText)
+		color_req = create_question(0, sceneGroup, scoreText)
 		
 		function play_swipe()
 			audio.play(audio_swipe["swipe" .. math.random(1,6)])
@@ -310,18 +326,16 @@ function scene:show( event )
 							transition.to( self, { time=100, transition=easing.outInCirc, y=(phone_height * 3 / 2), onComplete=listener_remove_block })
 							
 							if color_req.color == self.color then
-								score = score + 1
+								score.add(1)
 								audio.play(audio_plus_point)
 							else
-								score = score - 1
+								score.minus(1)
 								audio.play(audio_minus_point)
 							end
 							
 							random_color = math.random(0, 3)
 							color_req:removeSelf()
 							color_req = create_question(random_color, sceneGroup, scoreText)
-							reset_time()
-							scoreText.text = score
 						else
 							self.y = self.markY
 						end
@@ -371,14 +385,15 @@ function scene:destroy( event )
 	-- 
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
-		
-	phone_width = nil
-	phone_height = nil
-	ASSET_FOLDER = nil
-	ASSET_FOLDER_SOUND = nil
 	
-    audio.stop(1)
-    audio.dispose()
+	display.remove(scoreText)
+	display.remove(playing_field1)
+	display.remove(playing_field2)
+	display.remove(playing_field3)
+	display.remove(color_req)
+	color_req:removeSelf()
+	timer.cancel(game_timer)
+	
 end
 
 function scene:overlayBegan( event )

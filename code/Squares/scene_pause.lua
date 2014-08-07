@@ -32,13 +32,25 @@ function scene:create( event )
 	
 	local btn_back =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", 200, 50 )
 	btn_back.x = phone_width/2
-	btn_back.y = phone_height/2
+	btn_back.y = phone_height/2 - 25
 	
-	local function btnTap(event)
+	local btn_main_menu =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", 200, 50 )
+	btn_main_menu.x = phone_width/2
+	btn_main_menu.y = phone_height/2 + 35
+	
+	local function btnTapBack(event)
 		storyboard.hideOverlay("fade", 300)
 		return true
 	end
-	btn_back:addEventListener("tap", btnTap)
+	btn_back:addEventListener("tap", btnTapBack)
+	
+	
+	local function btnTapMainMenu(event)
+		local parent = event.parent 
+		storyboard.gotoScene( "scene_splash" )
+		return true
+	end
+	btn_main_menu:addEventListener("tap", btnTapMainMenu)
 	
 	sceneGroup:toFront()
 end

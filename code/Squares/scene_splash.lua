@@ -14,6 +14,9 @@ local phone_height = display.contentHeight
 
 local audio_menu_click = audio.loadSound( ASSET_FOLDER_SOUND .. "select_menu_click/menu_click.wav" )
 
+local score = require( "score" )
+local scoreText
+
 ---------------------------------------------------------------------------------
 
 function scene:create( event )
@@ -28,16 +31,27 @@ function scene:create( event )
 	bg.x = phone_width/2
 	bg.y = phone_height/2
 	
+	scoreText = score.init({
+		fontSize = 18,
+		font = native.systemFont,
+		x = display.contentCenterX,
+		y = phone_height/2,
+		maxDigits = 7,
+		leadingZeros = false,
+		filename = "scorefile.txt",
+	})
+	score.load()
+	
 	local btn_width = 780 / 4
 	local btn_height = 300 / 4
 	
 	local play_btn =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_play_btn.png", btn_width, btn_height )
 	play_btn.x = phone_width/2
-	play_btn.y = phone_height/2
+	play_btn.y = phone_height/2 + 50
 	
 	local credits_btn =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_credits_btn.png", btn_width, btn_height )
 	credits_btn.x = phone_width/2
-	credits_btn.y = phone_height/2 + 100
+	credits_btn.y = phone_height/2 + 150
 		
 	local function onTap_scene_game( event )
 		storyboard.gotoScene( "scene_game" )
@@ -72,8 +86,20 @@ function scene:hide( event )
 		--
 		-- INSERT code here to pause the scene
 		-- e.g. stop timers, stop animation, unload sounds, etc.)
+		
+		phone_width = nil
+		phone_height = nil
+		ASSET_FOLDER = nil
+		ASSET_FOLDER_SOUND = nil
+		
+		display.remove(scoreText)
+		scoreText = nil
+		
+		audio.stop(1)
+		audio.dispose()
 	elseif phase == "did" then
 		-- Called when the scene is now off screen
+
 	end	
 end
 
@@ -90,6 +116,9 @@ function scene:destroy( event )
 	phone_height = nil
 	ASSET_FOLDER = nil
 	ASSET_FOLDER_SOUND = nil
+	
+	scoreText = nil
+	score = nil
 	
     audio.stop(1)
     audio.dispose()
