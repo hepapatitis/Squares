@@ -11,11 +11,22 @@ local ASSET_FOLDER = "assets/"
 local phone_width = display.contentWidth
 local phone_height = display.contentHeight
 
+local scoreText
+local pause_btn
+local play_btn
+
 ---------------------------------------------------------------------------------
 
 function scene:create( event )
 	local sceneGroup = self.view
 
+	-- Hide Score & Pause Button
+	scoreText = event.params.score_text
+	scoreText.isVisible = false
+	
+	pause_btn = event.params.pause_btn
+	pause_btn.isVisible = false
+		
 	-- Called when the scene's view does not exist.
 	-- 
 	-- INSERT code here to initialize the scene
@@ -26,27 +37,35 @@ function scene:create( event )
 	bg:setFillColor(0,0,0)
 	bg.alpha = 0.5
 	
-	local box =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "pause_block.png", 275, 400 )
+	play_btn = display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-play.png", pause_btn.width, pause_btn.height )
+	play_btn.x = pause_btn.x
+	play_btn.y = pause_btn.y
+	
+	local box =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "pause_btn_bg.png", 260, 340 )
 	box.x = phone_width/2
 	box.y = phone_height/2
 	
-	local btn_back =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", 200, 50 )
-	btn_back.x = phone_width/2
-	btn_back.y = phone_height/2 - 25
+	local btn_restart =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn_restart.png", 200, 85 )
+	btn_restart.x = phone_width/2
+	btn_restart.y = phone_height/2 + 5
 	
-	local btn_main_menu =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", 200, 50 )
+	local btn_main_menu =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn_main_menu_2.png", 200, 85 )
 	btn_main_menu.x = phone_width/2
-	btn_main_menu.y = phone_height/2 + 35
+	btn_main_menu.y = phone_height/2 + 100
 	
-	local function btnTapBack(event)
-		storyboard.hideOverlay("fade", 300)
+	local function btnTapRestart(event)
+		storyboard.gotoScene( "scene_restart" )
 		return true
 	end
-	btn_back:addEventListener("tap", btnTapBack)
-	
-	
+	btn_restart:addEventListener("tap", btnTapRestart)
+
+	local function btnTapBack(event)
+		storyboard.hideOverlay()
+		return true
+	end
+	play_btn:addEventListener("tap", btnTapBack)
+
 	local function btnTapMainMenu(event)
-		local parent = event.parent 
 		storyboard.gotoScene( "scene_splash" )
 		return true
 	end
@@ -85,9 +104,12 @@ function scene:destroy( event )
 	-- INSERT code here to cleanup the scene
 	-- e.g. remove display objects, remove touch listeners, save state, etc.
 	
+	display.remove(play_btn)
 	phone_width = nil
 	phone_height = nil
 	ASSET_FOLDER = nil
+	scoreText.isVisible = true
+	pause_btn.isVisible = true
 end
 
 ---------------------------------------------------------------------------------

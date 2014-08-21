@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------
--- SPLASH SCENE
--- The first screen user see when opening the game
+-- GAME OVER SCENE
+-- The screen user see when the game is over
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "composer" )
@@ -12,10 +12,16 @@ local ASSET_FOLDER_SOUND = ASSET_FOLDER .. "sounds/"
 local phone_width = display.contentWidth
 local phone_height = display.contentHeight
 
+local btn_main_menu_width = 240
+local btn_main_menu_height = 60
+
 local audio_menu_click = audio.loadSound( ASSET_FOLDER_SOUND .. "select_menu_click/menu_click.wav" )
 
 local score = require( "score" )
 local scoreText
+
+local last_game_score = 0
+local last_game_score_text
 
 ---------------------------------------------------------------------------------
 
@@ -27,47 +33,56 @@ function scene:create( event )
 	-- INSERT code here to initialize the scene
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 	
-	local bg =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_bg.png", phone_width, phone_height )
+	local bg =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "game_over_scene.png", phone_width, phone_height )
 	bg.x = phone_width/2
 	bg.y = phone_height/2
 	
 	scoreText = score.init({
-		fontSize = 25,
+		fontSize = 40,
 		font = native.systemFont,
 		x = display.contentCenterX,
-		y = phone_height/2 - 20,
+		y = phone_height/2 + 94,
 		maxDigits = 7,
 		leadingZeros = false,
 		filename = "scorefile.txt",
-		align = "middle",
+		align = "right",
+		width = btn_main_menu_width,
 	})
-	score.set(score.load())
+	score.load()
+	local highscore = score.get()
+	score.set(highscore)
 	
-	local btn_width = 780 / 4
-	local btn_height = 300 / 4
+	last_game_score = event.params.last_game_score
+	if highscore < last_game_score then
+		score.set(last_game_score)
+	end
+	score.save()
 	
-	local play_btn =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_play_btn.png", btn_width, btn_height )
-	play_btn.x = phone_width/2
-	play_btn.y = phone_height/2 + 45
+	local text_options = 
+	{  
+		text = "",
+		parent = sceneGroup,
+		x = display.contentCenterX,
+		y = phone_height/2 + 30,
+		width = btn_main_menu_width,     --required for multi-line and alignment
+		font = native.systemFontBold,   
+		fontSize = 60,
+		align = "right"  --new alignment parameter
+	}
 	
-	local credits_btn =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_credits_btn.png", btn_width, btn_height )
-	credits_btn.x = phone_width/2
-	credits_btn.y = phone_height/2 + 145
-		
-	local function onTap_scene_game( event )
-		storyboard.gotoScene( "scene_game" )
-		audio.play(audio_menu_click)
+	last_game_score_text = display.newText( text_options )
+	last_game_score_text.text = string.format("%" .. "" .. 7 .. "d", last_game_score)
+	
+	local btn_main_menu =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", btn_main_menu_width, btn_main_menu_height )
+	btn_main_menu.x = phone_width/2
+	btn_main_menu.y = phone_height - btn_main_menu_height - 15
+	
+	local function btnTapMainMenu(event)
+		local parent = event.parent 
+		storyboard.gotoScene( "scene_splash" )
 		return true
 	end
-	play_btn:addEventListener( "tap", onTap_scene_game )
-	
-	local function onTap_scene_credits( event )
-		storyboard.gotoScene( "scene_credits" )
-		audio.play(audio_menu_click)
-		return true
-	end
-	credits_btn:addEventListener( "tap", onTap_scene_credits )
-	
+	btn_main_menu:addEventListener("tap", btnTapMainMenu)
 end
 
 function scene:show( event )

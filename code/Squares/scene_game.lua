@@ -11,12 +11,12 @@ local ASSET_FOLDER_SOUND = ASSET_FOLDER .. "sounds/"
 
 local phone_width = display.contentWidth
 local phone_height = display.contentHeight
-local playing_field_height = 275
+local playing_field_height = 250
 local playing_field_width = phone_width
 local pause_btn_width = 50
 local top_menu_width = phone_width - pause_btn_width
 local top_menu_height = 50
-local color_request_height = 200
+local color_request_height = 155
 local local_timer_height = 25
 local local_timer_width = phone_width
 
@@ -29,7 +29,7 @@ local game_timer
 local game_time
 local is_paused = 0
 local TIMER_MULTIPLIER = 25
-local TIME_LIMIT = 10
+local TIME_LIMIT = 20
 local TIME_BAR = TIME_LIMIT * TIMER_MULTIPLIER
 local TIMER_FPS = 1000 / TIMER_MULTIPLIER
 
@@ -37,8 +37,8 @@ local score = require( "score" )
 local scoreText = score.init({
 	fontSize = 18,
 	font = native.systemFont,
-	x = 20,
-	y = 0,
+	x = 45,
+	y = top_menu_height/2,
 	maxDigits = 7,
 	leadingZeros = false,
 	filename = "scorefile.txt",
@@ -57,13 +57,12 @@ local audio_swipe = {
 
 
 -- Start & Pause Game Function
+local pause_btn
 local function pause_game()
 	local result = timer.pause(game_timer)
 	local options =
 	{
-		effect = "fade",
-		time = 300,
-		params = { sample_var=456 }
+		params = { score_text = scoreText, pause_btn = pause_btn }
 	}
 	storyboard.showOverlay( "scene_pause", options )
 end
@@ -86,7 +85,7 @@ function scene:create( event )
 	-- Create Top Menu
 	local top_menu = display.newImageRect( sceneGroup, ASSET_FOLDER .. "top_menu.png", top_menu_width, top_menu_height )
 	top_menu.x = top_menu_width/2
-	top_menu.y = 0
+	top_menu.y = top_menu_height/2
 	
 	score.reset()
 end
@@ -118,17 +117,20 @@ function scene:show( event )
 		-- Create Timer
 		local create_timer = display.newImageRect( sceneGroup, ASSET_FOLDER .. "timer.png", local_timer_width, local_timer_height )
 		create_timer.x = phone_width/2 - 1000
-		create_timer.y = (color_request_height)+(top_menu_height/2)+(local_timer_height/2)
+		create_timer.y = (color_request_height)+(top_menu_height)+(local_timer_height/2)
 		
 		-- Timer START
 		game_time = 0
 		function game_loop()
 			refresh_time_look()
 			game_time = game_time + 1
-			if game_time >= TIME_BAR then
+			if game_time > TIME_BAR then
 				-- When timer reaches the TIME_BAR, it's GAMEOVER
-				score.save()
-				pause_game()
+				local game_over_options =
+				{
+					params = { last_game_score = score.get() }
+				}
+				storyboard.gotoScene( "scene_game_over", game_over_options )
 			end
 		end
 		
@@ -159,15 +161,15 @@ function scene:show( event )
 		
 		local function start_game()
 			game_timer = timer.performWithDelay( TIMER_FPS, game_loop, 0 )
-			is_paused = false
+			is_paused = 0
 		end
 		
 		start_game()
 		
 		-- Create Pause Button
-		local pause_btn = display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-pause.png", pause_btn_width, top_menu_height )
+		pause_btn = display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-pause.png", pause_btn_width, top_menu_height )
 		pause_btn.x = top_menu_width+(pause_btn_width/2)
-		pause_btn.y = 0
+		pause_btn.y = top_menu_height/2
 		
 		pause_btn:addEventListener( "tap", pause_listener )
 	
@@ -188,7 +190,7 @@ function scene:show( event )
 			
 			local crq = display.newImageRect( sceneGroup, image, phone_width, color_request_height )
 			crq.x = phone_width/2
-			crq.y = (color_request_height/2)+(top_menu_height/2)
+			crq.y = (color_request_height/2)+(top_menu_height)
 			crq.color = color
 			
 			return crq
@@ -217,7 +219,7 @@ function scene:show( event )
 			
 			local block = display.newImageRect( sceneGroup, image, playing_field_width, playing_field_height )
 			block.x = phone_width/2
-			block.y = (color_request_height)+(top_menu_height/2)+(local_timer_height)+(playing_field_height/2)
+			block.y = (color_request_height)+(top_menu_height)+(local_timer_height)+(playing_field_height/2)
 			block.color = color;
 			
 			-- Function to remove block
@@ -391,6 +393,7 @@ function scene:destroy( event )
 	display.remove(playing_field2)
 	display.remove(playing_field3)
 	display.remove(color_req)
+	display.remove(pause_btn)
 	color_req:removeSelf()
 	timer.cancel(game_timer)
 	

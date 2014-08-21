@@ -13,6 +13,8 @@ function M.init( options )
 	opt.y = customOptions.y or opt.fontSize * 0.5
 	opt.maxDigits = customOptions.maxDigits or 6
 	opt.leadingZeros = customOptions.leadingZeros or false
+	opt.align = customOptions.align or "left"
+	opt.width = customOptions.width or 100
 	M.filename = customOptions.filename or "scorefile.txt"
 
 	local prefix = ""
@@ -21,14 +23,24 @@ function M.init( options )
 	end
 	M.format = "%" .. prefix .. opt.maxDigits .. "d"
 
-	M.scoreText = display.newText(string.format(M.format, 0), opt.x, opt.y, opt.font, opt.fontSize)
+	local text_options = 
+	{  
+		text = string.format(M.format, 0),
+		x = opt.x,
+		y = opt.y,
+		width = opt.width,     --required for multi-line and alignment
+		font = opt.font,   
+		fontSize = opt.fontSize,
+		align = opt.align  --new alignment parameter
+	}
+	
+	M.scoreText = display.newText(text_options)
 	return M.scoreText
 end
 
 function M.set( value )
 	M.score = value
 	M.refreshScore()
-
 end
 
 function M.get()
@@ -64,6 +76,10 @@ function M.save()
 		print("Saved! Score is: " .. M.score)
         return true
     else
+		local contents = tostring( M.score )
+		file = io.open( path, "w" )
+		file:write( contents )
+		io.close( file )
     	print("Error: could not read ", M.filename, ".")
         return false
     end
