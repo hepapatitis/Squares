@@ -25,11 +25,13 @@ local playing_field2
 local playing_field3
 local color_req
 
+local blockGroup = display.newGroup()
+
 local game_timer
 local game_time
 local is_paused = 0
-local TIMER_MULTIPLIER = 25
-local TIME_LIMIT = 20
+local TIMER_MULTIPLIER = 20
+local TIME_LIMIT = 19
 local TIME_BAR = TIME_LIMIT * TIMER_MULTIPLIER
 local TIMER_FPS = 1000 / TIMER_MULTIPLIER
 
@@ -37,11 +39,12 @@ local score = require( "score" )
 local scoreText = score.init({
 	fontSize = 18,
 	font = native.systemFont,
-	x = 45,
+	x = 75,
 	y = top_menu_height/2,
 	maxDigits = 7,
 	leadingZeros = false,
 	filename = "scorefile.txt",
+	align = "left",
 })
 
 local audio_plus_point = audio.loadSound( ASSET_FOLDER_SOUND .. "score_plus/score_plus.wav" )
@@ -92,7 +95,6 @@ end
 
 function scene:show( event )
 	local sceneGroup = self.view
-	local blockGroup = display.newGroup()
 	local phase = event.phase
 	blockGroup:toBack()
 	if(storyboard.getPrevious() ~= nil) then
@@ -336,7 +338,9 @@ function scene:show( event )
 							end
 							
 							random_color = math.random(0, 3)
-							color_req:removeSelf()
+							if (color_req ~= nil) then
+								color_req:removeSelf()
+							end
 							color_req = create_question(random_color, sceneGroup, scoreText)
 						else
 							self.y = self.markY
@@ -394,9 +398,12 @@ function scene:destroy( event )
 	display.remove(playing_field3)
 	display.remove(color_req)
 	display.remove(pause_btn)
-	color_req:removeSelf()
+	display.remove(blockGroup)
+	color_req = nil
 	timer.cancel(game_timer)
 	
+    audio.stop(1)
+    audio.dispose()
 end
 
 function scene:overlayBegan( event )

@@ -34,12 +34,13 @@ function scene:create( event )
 	scoreText = score.init({
 		fontSize = 25,
 		font = native.systemFont,
-		x = display.contentCenterX,
+		x = phone_width/2,
 		y = phone_height/2 - 20,
 		maxDigits = 7,
 		leadingZeros = false,
 		filename = "scorefile.txt",
-		align = "middle",
+		align = "center",
+		width = phone_width,
 	})
 	score.set(score.load())
 	
@@ -74,6 +75,7 @@ function scene:show( event )
 	local sceneGroup = self.view
 	
 	if(storyboard.getPrevious() ~= nil) then
+		storyboard.purgeScene(storyboard.getSceneName("previous"))
 		storyboard.removeScene(storyboard.getSceneName("previous"))
 	end
 end

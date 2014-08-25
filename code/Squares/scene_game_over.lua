@@ -4,6 +4,7 @@
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "composer" )
+storyboard.removeAll();
 local scene = storyboard.newScene()
 
 local ASSET_FOLDER = "assets/"
@@ -37,6 +38,9 @@ function scene:create( event )
 	bg.x = phone_width/2
 	bg.y = phone_height/2
 	
+	print "Last"
+	print (event.params.last_game_score)
+	
 	scoreText = score.init({
 		fontSize = 40,
 		font = native.systemFont,
@@ -48,15 +52,15 @@ function scene:create( event )
 		align = "right",
 		width = btn_main_menu_width,
 	})
-	score.load()
-	local highscore = score.get()
+	
+	local highscore = score.load()
 	score.set(highscore)
 	
 	last_game_score = event.params.last_game_score
-	if highscore < last_game_score then
-		score.set(last_game_score)
+	if tonumber(highscore) < tonumber(last_game_score) then
+		score.set(tonumber(last_game_score))
+		score.save()
 	end
-	score.save()
 	
 	local text_options = 
 	{  
@@ -89,6 +93,7 @@ function scene:show( event )
 	local sceneGroup = self.view
 	
 	if(storyboard.getPrevious() ~= nil) then
+		storyboard.purgeScene(storyboard.getSceneName("previous"))
 		storyboard.removeScene(storyboard.getSceneName("previous"))
 	end
 end

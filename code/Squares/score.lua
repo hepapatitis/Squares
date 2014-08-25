@@ -63,7 +63,8 @@ function M.reset()
 end
 
 function M.refreshScore()
-	M.scoreText.text = string.format(M.format, M.score)
+	--M.scoreText.text = string.format(M.format, M.score)
+	M.scoreText.text = M.score
 end
 
 function M.save()
@@ -94,7 +95,7 @@ function M.load()
          local contents = file:read( "*a" )
          local score = tonumber(contents);
          io.close( file )
-		 print("Load! Score is: " .. M.score)
+		 print("Load! Score is: " .. score)
          return score
     end
     print("Could not read scores from ", M.filename, ".")
