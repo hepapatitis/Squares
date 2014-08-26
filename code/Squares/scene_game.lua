@@ -318,7 +318,7 @@ function scene:show( event )
 							if self.x < self.markX then
 								transition.to( self, { time=100, transition=easing.outInCirc, x=(0 - (phone_width/2)), onComplete=listener_remove_block })
 							else
-								transition.to( self, { time=100, transition=easing.outInCirc, x=(phone_width * 3 / 2), onComplete=listener_remove_block })
+								transition.to( self, { time=100, transition=easing.outInCirc, x=(phone_width * 1.5), onComplete=listener_remove_block })
 							end
 						else
 							self.x = self.markX
@@ -327,7 +327,7 @@ function scene:show( event )
 						-- Remove by Vertical
 						if self.diffY > (self.height / 10) then
 							-- Removed
-							transition.to( self, { time=100, transition=easing.outInCirc, y=(phone_height * 3 / 2), onComplete=listener_remove_block })
+							transition.to( self, { time=100, transition=easing.linear, y=(phone_height + (playing_field_height * 0.5)), onComplete=listener_remove_block })
 							
 							if color_req.color == self.color then
 								score.add(1)

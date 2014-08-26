@@ -36,6 +36,8 @@ function scene:create( event )
 	local bg = display.newRect( sceneGroup, phone_width/2, phone_height/2, phone_width, phone_height+100)
 	bg:setFillColor(0,0,0)
 	bg.alpha = 0.5
+	bg:addEventListener("touch", function() return true end)
+	bg:addEventListener("tap", function() return true end)
 	
 	play_btn = display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-play.png", pause_btn.width, pause_btn.height )
 	play_btn.x = pause_btn.x

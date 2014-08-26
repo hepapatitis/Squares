@@ -75,7 +75,7 @@ function scene:create( event )
 	}
 	
 	last_game_score_text = display.newText( text_options )
-	last_game_score_text.text = string.format("%" .. "" .. 7 .. "d", last_game_score)
+	last_game_score_text.text = last_game_score
 	
 	local btn_main_menu =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn-main-menu.png", btn_main_menu_width, btn_main_menu_height )
 	btn_main_menu.x = phone_width/2
