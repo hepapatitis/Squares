@@ -31,10 +31,15 @@ function scene:create( event )
 	bg.x = phone_width/2
 	bg.y = phone_height/2
 	
+	
+	local highscore_container =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "hiscore_banner.png", phone_width, 55 )
+	highscore_container.x = phone_width/2
+	highscore_container.y = phone_height/2 - 20
+	
 	scoreText = score.init({
 		fontSize = 25,
 		font = native.systemFont,
-		x = phone_width/2,
+		x = phone_width/2 + 100,
 		y = phone_height/2 - 20,
 		maxDigits = 7,
 		leadingZeros = false,
@@ -49,11 +54,13 @@ function scene:create( event )
 	
 	local play_btn =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_play_btn.png", btn_width, btn_height )
 	play_btn.x = phone_width/2
-	play_btn.y = phone_height/2 + 45
+	play_btn.y = phone_height/2 + 70
+	play_btn:toFront()
 	
 	local credits_btn =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "splash_credits_btn.png", btn_width, btn_height )
 	credits_btn.x = phone_width/2
-	credits_btn.y = phone_height/2 + 145
+	credits_btn.y = phone_height/2 + 170
+	credits_btn:toFront()
 		
 	local function onTap_scene_game( event )
 		storyboard.gotoScene( "scene_game" )
@@ -69,6 +76,7 @@ function scene:create( event )
 	end
 	credits_btn:addEventListener( "tap", onTap_scene_credits )
 	
+	bg:toBack()
 end
 
 function scene:show( event )
@@ -78,6 +86,7 @@ function scene:show( event )
 		storyboard.purgeScene(storyboard.getSceneName("previous"))
 		storyboard.removeScene(storyboard.getSceneName("previous"))
 	end
+	
 end
 
 function scene:hide( event )
@@ -97,6 +106,7 @@ function scene:hide( event )
 		
 		display.remove(scoreText)
 		scoreText = nil
+		audio_menu_click = nil
 		
 		audio.stop(1)
 		audio.dispose()
@@ -122,9 +132,11 @@ function scene:destroy( event )
 	
 	scoreText = nil
 	score = nil
+	audio_menu_click = nil
 	
     audio.stop(1)
     audio.dispose()
+	
 end
 
 ---------------------------------------------------------------------------------

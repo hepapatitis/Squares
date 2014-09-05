@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------
--- SPLASH SCENE
--- The first screen user see when opening the game
+-- PAUSE SCENE
+-- The screen user see when pausing the game
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "composer" )
@@ -46,26 +46,22 @@ function scene:create( event )
 	local box =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "pause_btn_bg.png", 260, 340 )
 	box.x = phone_width/2
 	box.y = phone_height/2
-	
-	local btn_restart =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn_restart.png", 200, 85 )
-	btn_restart.x = phone_width/2
-	btn_restart.y = phone_height/2 + 5
+		
+	local btn_resume =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn_resume.png", 200, 85 )
+	btn_resume.x = phone_width/2
+	btn_resume.y = phone_height/2 + 5
 	
 	local btn_main_menu =  display.newImageRect( sceneGroup, ASSET_FOLDER .. "btn_main_menu_2.png", 200, 85 )
 	btn_main_menu.x = phone_width/2
 	btn_main_menu.y = phone_height/2 + 100
 	
-	local function btnTapRestart(event)
-		storyboard.gotoScene( "scene_restart" )
-		return true
-	end
-	btn_restart:addEventListener("tap", btnTapRestart)
-
+	
 	local function btnTapBack(event)
 		storyboard.hideOverlay()
 		return true
 	end
 	play_btn:addEventListener("tap", btnTapBack)
+	btn_resume:addEventListener("tap", btnTapBack)
 
 	local function btnTapMainMenu(event)
 		storyboard.gotoScene( "scene_splash" )

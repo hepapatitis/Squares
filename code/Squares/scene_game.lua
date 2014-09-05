@@ -31,9 +31,24 @@ local game_timer
 local game_time
 local is_paused = 0
 local TIMER_MULTIPLIER = 20
-local TIME_LIMIT = 19
+local TIME_LIMIT = 19 -- 19
 local TIME_BAR = TIME_LIMIT * TIMER_MULTIPLIER
 local TIMER_FPS = 1000 / TIMER_MULTIPLIER
+
+-- Count block cycle
+local BLOCK_LIMIT = {
+	[0] = 2, -- red
+	[1] = 2, -- blue
+	[2] = 2, -- green
+	[3] = 2, -- yellow
+}
+local block_counter = {
+	[0] = 0, -- red
+	[1] = 0, -- blue
+	[2] = 0, -- green
+	[3] = 0, -- yellow
+}
+local block_total_count = 0
 
 local score = require( "score" )
 local scoreText = score.init({
@@ -74,6 +89,28 @@ local function resume_game()
 	timer.resume(game_timer)
 end
 ---------------------------------------------------------------------------------
+
+-- Game Over Game Functionlocal function pause_game()
+local function game_over()
+	local result = timer.pause(game_timer)
+	scoreText.isVisible = false
+	local options =
+	{
+		params = { last_game_score = score.get() }
+	}
+	storyboard.showOverlay( "scene_game_over", options )
+	
+end
+
+-- Clear Block Counter
+local function clear_block_counter()
+	block_counter = {
+		[0] = 0, -- red
+		[1] = 0, -- blue
+		[2] = 0, -- green
+		[3] = 0, -- yellow
+	}
+end
 
 function scene:create( event )
 	local sceneGroup = self.view
@@ -128,11 +165,7 @@ function scene:show( event )
 			game_time = game_time + 1
 			if game_time > TIME_BAR then
 				-- When timer reaches the TIME_BAR, it's GAMEOVER
-				local game_over_options =
-				{
-					params = { last_game_score = score.get() }
-				}
-				storyboard.gotoScene( "scene_game_over", game_over_options )
+				game_over()
 			end
 		end
 		
@@ -219,6 +252,9 @@ function scene:show( event )
 				image = ASSET_FOLDER .. "block-yellow.png"
 			end
 			
+			block_counter[color] = block_counter[color] + 1
+			block_total_count = block_total_count + 1
+			
 			local block = display.newImageRect( sceneGroup, image, playing_field_width, playing_field_height )
 			block.x = phone_width/2
 			block.y = (color_request_height)+(top_menu_height)+(local_timer_height)+(playing_field_height/2)
@@ -230,6 +266,22 @@ function scene:show( event )
 				block.isVisible = false
 				
 				local random_color = math.random(0, 3)
+				local finish_check = 0
+				
+				while finish_check == 0 do
+					if (block_counter[random_color] >= BLOCK_LIMIT[random_color]) then
+						finish_check = 0
+						random_color = math.random(0, 3)
+					else
+						finish_check = 1
+					end
+					
+					if block_total_count >= 8 then
+						block_total_count = 0
+						clear_block_counter()
+					end
+				end
+				
 				if playing_field1~=nil then 
 					playing_field1 = create_block(random_color, sceneGroup, scoreText)
 					playing_field1:toBack()
@@ -341,6 +393,7 @@ function scene:show( event )
 							if (color_req ~= nil) then
 								color_req:removeSelf()
 							end
+							clear_block_counter()
 							color_req = create_question(random_color, sceneGroup, scoreText)
 						else
 							self.y = self.markY

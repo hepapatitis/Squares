@@ -67,6 +67,15 @@ function M.refreshScore()
 	M.scoreText.text = M.score
 end
 
+function M.createFile()
+	local contents = "0"
+	file = io.open( path, "w" )
+	file:write( contents )
+	io.close( file )
+	print("New Score File created: ", M.filename, ".")
+	return true
+end
+
 function M.save()
 	local path = system.pathForFile( M.filename, system.DocumentsDirectory)
     local file = io.open(path, "w")
@@ -97,7 +106,11 @@ function M.load()
          io.close( file )
 		 print("Load! Score is: " .. score)
          return score
+	else
+		M.createFile()
+        return false
     end
+	
     print("Could not read scores from ", M.filename, ".")
     return nil
 end
