@@ -169,9 +169,10 @@ local game_timer
 local game_timer_bar
 local game_time
 local game_is_paused = 0
-local TIMER_MULTIPLIER = 20
-local TIME_LIMIT = 19 -- 19
-local TIME_BAR = TIME_LIMIT * TIMER_MULTIPLIER
+local TIMER_MULTIPLIER = 100
+local TIME_LIMIT = 10 -- 19
+local TIME_BAR = (TIME_LIMIT-1) * TIMER_MULTIPLIER
+local TIMER_RIGHT_BONUS = 0.5 * TIMER_MULTIPLIER
 local TIMER_FPS = 1000 / TIMER_MULTIPLIER
 local BLOCK_LIMIT = {
 	[0] = 2, -- red
@@ -191,6 +192,7 @@ local game_color_req
 -- Start & Pause & Resume Game
 local function start_game()
 	game_timer = timer.performWithDelay( TIMER_FPS, game_loop, 0 )
+	game_loop()
 	game_is_paused = 0
 end
 
@@ -344,10 +346,16 @@ function create_game_screen()
 	end
 	
 	-- Create Block Function
-	function create_block(color, sceneGroup, scoreText)
+	function create_block(color, sceneGroup, disableVertical, disableHorizontal, startGame)
 		local image
 		
-		if color == 0 then
+		if color == -2 then
+			image = ASSET_FOLDER .. "block-tutorial-2-red.png"
+			color = 0
+		elseif color == -1 then
+			image = ASSET_FOLDER .. "block-tutorial-1-blue.png"
+			color = 1
+		elseif color == 0 then
 			image = ASSET_FOLDER .. "block-red.png"
 		elseif color == 1 then
 			image = ASSET_FOLDER .. "block-blue.png"
@@ -388,13 +396,13 @@ function create_game_screen()
 			end
 			
 			if game_playing_field1~=nil then 
-				game_playing_field1 = create_block(random_color, sceneGroup, scoreText)
+				game_playing_field1 = create_block(random_color, sceneGroup)
 				game_playing_field1:toBack()
 			elseif game_playing_field2~=nil then 
-				game_playing_field2 = create_block(random_color, sceneGroup, scoreText)
+				game_playing_field2 = create_block(random_color, sceneGroup)
 				game_playing_field2:toBack()
 			elseif game_playing_field3~=nil then 
-				game_playing_field3 = create_block(random_color, sceneGroup, scoreText)
+				game_playing_field3 = create_block(random_color, sceneGroup)
 				game_playing_field3:toBack()
 			end
 			
@@ -422,18 +430,26 @@ function create_game_screen()
 					-- then drag our object
 					
 					-- do a bit of test
-					self.tmpX = event.x - event.xStart + self.markX
-					self.tmpY = event.y - event.yStart + self.markY
-					if self.tmpX > self.markX then
-						self.tmpDiffX = self.tmpX - self.markX
-					elseif self.tmpX < self.markX then
-						self.tmpDiffX = self.markX - self.tmpX
+					if disableVertical ~= nil and disableVertical == 1 then
+						-- Do Nothing
+					else
+						self.tmpX = event.x - event.xStart + self.markX
+						if self.tmpX > self.markX then
+							self.tmpDiffX = self.tmpX - self.markX
+						elseif self.tmpX < self.markX then
+							self.tmpDiffX = self.markX - self.tmpX
+						end
 					end
 					
-					if self.tmpY > self.markY then
-						self.tmpDiffY = self.tmpY - self.markY
-					elseif self.tmpY < self.markY then
-						self.tmpDiffY = self.markY - self.tmpY
+					if disableHorizontal ~= nil and disableHorizontal == 1 then
+						-- Do Nothing
+					else
+						self.tmpY = event.y - event.yStart + self.markY
+						if self.tmpY > self.markY then
+							self.tmpDiffY = self.tmpY - self.markY
+						elseif self.tmpY < self.markY then
+							self.tmpDiffY = self.markY - self.tmpY
+						end
 					end
 					
 					-- Now we know whether we can move horizontally or vertically
@@ -488,7 +504,16 @@ function create_game_screen()
 						
 						if game_color_req.color == self.color then
 							add_score(1)
+							game_time = game_time - TIMER_RIGHT_BONUS
+							if game_time > TIME_BAR then
+								game_time = TIME_BAR
+							end
+							
 							audio.play(audio_plus_point)
+							
+							if startGame ~= nil and startGame == 1 then
+								start_game()
+							end
 						else
 							minus_score(1)
 							audio.play(audio_minus_point)
@@ -499,7 +524,7 @@ function create_game_screen()
 							game_color_req:removeSelf()
 						end
 						clear_block_counter()
-						game_color_req = create_question(random_color, sceneGroup, scoreText)
+						game_color_req = create_question(random_color, sceneGroup)
 					else
 						self.y = self.markY
 					end
@@ -514,11 +539,21 @@ function create_game_screen()
 		return block;
 	end
 	
+	function run_tutorial()
+		refresh_time_look()
+		game_color_req = create_question(0, game_scene_group, scoreText)
+		game_playing_field1 = create_block(-2, game_scene_block_group, 1, 0, 1)
+		game_playing_field2 = create_block(-1, game_scene_block_group, 0, 1)
+	end
+	
+	-- Create Tutorials
+	run_tutorial()
+	
 	-- Let's Start the game
-	game_color_req = create_question(0, game_scene_group, scoreText)
-	game_playing_field1 = create_block(2, game_scene_block_group, scoreText)
-	game_playing_field2 = create_block(3, game_scene_block_group, scoreText)
-	start_game()
+	--game_color_req = create_question(0, game_scene_group, scoreText)
+	--game_playing_field1 = create_block(2, game_scene_block_group, scoreText)
+	--game_playing_field2 = create_block(3, game_scene_block_group, scoreText)
+	--start_game()
 end
 
 function remove_game_screen()
