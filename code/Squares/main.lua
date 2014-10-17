@@ -7,6 +7,14 @@
 -- Version	: 2.0
 --
 -----------------------------------------------------------------------------------------
+-- TABLE OF CONTENTS
+--
+-- SPLASH SCREEN 		(#splashscreen)
+-- CREDITS SCREEN 		(#creditsscreen)
+-- GAME SCREEN 			(#gamescreen)
+-- GAME OVER SCREEN 	(#gameoverscreen)
+--
+-----------------------------------------------------------------------------------------
 
 -- Add any objects that should appear on all scenes below (e.g. tab bar, hud, etc.):
 display.setStatusBar( display.HiddenStatusBar )
@@ -88,7 +96,7 @@ function load_high_score()
     return 0
 end
 
--- SPLASH SCREEN
+-- SPLASH SCREEN - #splashscreen
 -----------------------------------------------------------------------------------------
 local splash_bg
 local splash_highscore_container
@@ -160,7 +168,7 @@ function remove_splash_screen()
 	display.remove(splash_scene_group);
 end
 
--- GAME SCREEN
+-- GAME SCREEN - #gamescreen
 -----------------------------------------------------------------------------------------
 local game_scene_group
 local game_scene_block_group
@@ -188,6 +196,8 @@ local game_playing_field1
 local game_playing_field2
 local game_playing_field3
 local game_color_req
+local count_right_answer
+local count_combo
 
 -- Start & Pause & Resume Game
 local function start_game()
@@ -502,11 +512,25 @@ function create_game_screen()
 						-- Removed
 						transition.to( self, { time=100, transition=easing.linear, y=(phone_height + (playing_field_height * 0.5)), onComplete=listener_remove_block })
 						
+						-- If RIGHT Answer
 						if game_color_req.color == self.color then
 							add_score(1)
-							game_time = game_time - TIMER_RIGHT_BONUS
-							if game_time > TIME_BAR then
-								game_time = TIME_BAR
+							
+							count_right_answer = count_right_answer + 1
+							
+							-- 3 RIGHT Answer
+							if count_right_answer == 3 then
+								count_right_answer = 0
+								
+								-- Combo
+								count_combo = count_combo + 1
+								add_score((count_combo * 3))
+							
+								-- Timer
+								game_time = game_time - (TIMER_RIGHT_BONUS * 3)
+								if game_time < 0 then
+									game_time = 0
+								end
 							end
 							
 							audio.play(audio_plus_point)
@@ -515,8 +539,11 @@ function create_game_screen()
 								start_game()
 							end
 						else
+						-- If WRONG Answer
 							minus_score(1)
 							audio.play(audio_minus_point)
+							count_right_answer = 0
+							count_combo = 0
 						end
 						
 						random_color = math.random(0, 3)
@@ -546,6 +573,9 @@ function create_game_screen()
 		game_playing_field2 = create_block(-1, game_scene_block_group, 0, 1)
 	end
 	
+		count_combo = 0
+	count_right_answer = 0
+	
 	-- Create Tutorials
 	run_tutorial()
 	
@@ -570,7 +600,7 @@ function remove_game_screen()
 	
 end
 
--- CREDITS SCREEN
+-- CREDITS SCREEN - #creditsscreen
 -----------------------------------------------------------------------------------------
 local credits
 local credits_scene_group
@@ -594,7 +624,7 @@ function remove_credits_screen()
 	display.remove(credits_scene_group);
 end
 
--- PAUSE SCREEN
+-- PAUSE SCREEN - #pausescreen
 -----------------------------------------------------------------------------------------
 local pause_overlay
 local pause_btn_play
@@ -655,7 +685,7 @@ function remove_pause_screen()
 end
 
 
--- GAME OVER SCREEN
+-- GAME OVER SCREEN - #gameoverscreen
 -----------------------------------------------------------------------------------------
 local gameover_overlay
 local gameover_btn_main_menu
