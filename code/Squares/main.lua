@@ -233,6 +233,7 @@ function create_game_screen()
 	local color_request_height = 155
 	local local_timer_height = 25
 	local local_timer_width = phone_width
+	local current_random_color
 
 	game_scene_group = display.newGroup()
 	game_scene_block_group = display.newGroup()
@@ -346,6 +347,9 @@ function create_game_screen()
 		crq.x = phone_width/2
 		crq.y = (color_request_height/2)+(top_menu_height)
 		crq.color = color
+		
+		-- Set the current random color to the color
+		current_random_color = color
 		
 		return crq
 	end
@@ -546,11 +550,17 @@ function create_game_screen()
 							count_combo = 0
 						end
 						
-						random_color = math.random(0, 3)
 						if (game_color_req ~= nil) then
 							game_color_req:removeSelf()
 						end
 						clear_block_counter()
+						
+						-- Get Random Color that is not the same
+						random_color = math.random(0, 3)
+						while current_random_color == random_color do
+							random_color = math.random(0, 3)
+						end
+						
 						game_color_req = create_question(random_color, sceneGroup)
 					else
 						self.y = self.markY
@@ -746,7 +756,7 @@ function create_gameover_screen()
 		y = phone_height/2 + 21,
 		width = btn_main_menu_width,     --required for multi-line and alignment
 		font = native.systemFontBold,   
-		fontSize = 50,
+		fontSize = 38,
 		align = "right"  --new alignment parameter
 	}
 	gameover_lastscore_text = display.newText( gameover_lastscore_text_options )
